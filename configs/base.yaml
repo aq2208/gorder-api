@@ -1,0 +1,35 @@
+app:
+  name: order-api
+  http_addr: ":8080"
+  log_level: info
+
+http:
+  read_timeout: 5s
+  write_timeout: 10s
+  idle_timeout: 60s
+
+mysql:
+  dsn: "root:root@tcp(127.0.0.1:3306)/orders?parseTime=true"
+  max_open_conns: 16
+  max_idle_conns: 16
+  conn_max_lifetime: 30m
+
+redis:
+  addr: "127.0.0.1:6379"
+  password: ""
+
+idempotency:
+  ttl: 10m
+
+rabbitmq:
+  url: "amqp://guest:guest@127.0.0.1:5672/"
+  exchange: "orders.cmd"
+  routing_key: "orders.create.v1"
+
+kafka:
+  brokers: ["127.0.0.1:9092"]
+  topic_events: "orders.events.v1"
+
+security:
+  jwks_url: "http://localhost:8081/realms/demo/protocol/openid-connect/certs"
+  grpc_mtls: false

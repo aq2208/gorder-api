@@ -1,0 +1,12 @@
+app:
+  http_addr: ":8080"
+mysql:
+  dsn: "staging_user:***@tcp(mysql.staging:3306)/orders?parseTime=true"
+redis:
+  addr: "redis.staging:6379"
+rabbitmq:
+  url: "amqp://user:***@rabbitmq.staging:5672/"
+kafka:
+  brokers: ["kafka-1.staging:9092","kafka-2.staging:9092"]
+security:
+  grpc_mtls: true

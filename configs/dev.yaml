@@ -1,0 +1,12 @@
+app:
+  http_addr: ":8080"
+mysql:
+  dsn: "root:root@tcp(127.0.0.1:3306)/orders?parseTime=true"
+redis:
+  addr: "127.0.0.1:6379"
+rabbitmq:
+  url: "amqp://guest:guest@127.0.0.1:5672/"
+kafka:
+  brokers: ["127.0.0.1:9092"]
+security:
+  grpc_mtls: false
