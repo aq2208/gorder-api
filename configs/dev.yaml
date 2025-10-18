@@ -9,4 +9,6 @@ rabbitmq:
 kafka:
   brokers: ["127.0.0.1:9092"]
 security:
-  grpc_mtls: false
+  jwt_secret: "dev-secret"
+  issuer: "go-order-api"
+  audience: "go-order-api-clients"

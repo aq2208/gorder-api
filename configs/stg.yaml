@@ -9,4 +9,6 @@ rabbitmq:
 kafka:
   brokers: ["kafka-1.staging:9092","kafka-2.staging:9092"]
 security:
-  grpc_mtls: true
+  jwt_secret: "stg-secret"
+  issuer: "go-order-api"
+  audience: "go-order-api-clients"

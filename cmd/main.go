@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/aq2208/gorder-api/internal/bootstrap"
 	"github.com/aq2208/gorder-api/internal/config"
 )
 
@@ -19,7 +18,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app, cleanup, err := bootstrap.InitWithConfig(cfg)
+	app, cleanup, err := InitWithConfig(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

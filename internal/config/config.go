@@ -52,8 +52,9 @@ type Config struct {
 	} `koanf:"kafka"`
 
 	Security struct {
-		JWKSURL  string `koanf:"jwks_url"`
-		GRPCmTLS bool   `koanf:"grpc_mtls"`
+		JWTSecret string `koanf:"jwt_secret"`
+		Issuer    string `koanf:"issuer"`
+		Audience  string `koanf:"audience"`
 	} `koanf:"security"`
 }
 
@@ -63,6 +64,7 @@ func Load(pathDir, envName string) (Config, error) {
 	if err := k.Load(file.Provider(fmt.Sprintf("%s/base.yaml", pathDir)), yaml.Parser()); err != nil {
 		return Config{}, fmt.Errorf("load base: %w", err)
 	}
+
 	// 2) env override (dev/staging/prod). Optional: allow missing for local runs.
 	_ = k.Load(file.Provider(fmt.Sprintf("%s/%s.yaml", pathDir, envName)), yaml.Parser())
 
