@@ -1,15 +1,16 @@
-package main
+package app
 
 import (
 	"context"
 	"database/sql"
 	"time"
 
+	"github.com/aq2208/gorder-api/configs"
 	"github.com/aq2208/gorder-api/internal/adapter/cache"
 	"github.com/aq2208/gorder-api/internal/adapter/http"
+	"github.com/aq2208/gorder-api/internal/adapter/http/middleware"
 	"github.com/aq2208/gorder-api/internal/adapter/observ"
 	"github.com/aq2208/gorder-api/internal/adapter/repo"
-	"github.com/aq2208/gorder-api/internal/config"
 	"github.com/aq2208/gorder-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -24,7 +25,8 @@ type ginEngine interface {
 	Run(addr ...string) error
 }
 
-func InitWithConfig(cfg config.Config) (*App, func(), error) {
+func InitWithConfig(cfg configs.Config) (*App, func(), error) {
+	// init logger
 	logger, _ := observ.NewLogger()
 	defer logger.Sync()
 
@@ -61,7 +63,9 @@ func InitWithConfig(cfg config.Config) (*App, func(), error) {
 
 	createUC := usecase.NewCreateOrder(orderRepo, idem, outboxRepo)
 	h := http.NewOrderHandler(createUC, orderRepo)
-	router := http.NewRouter(h)
+	th := http.NewTokenHandler(cfg)
+	authz := middleware.NewAuthz(cfg)
+	router := http.NewRouter(h, th, authz)
 
 	cleanup := func() {
 		_ = db.Close()

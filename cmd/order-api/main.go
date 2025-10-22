@@ -4,7 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/aq2208/gorder-api/internal/config"
+	"github.com/aq2208/gorder-api/cmd/order-api/app"
+	"github.com/aq2208/gorder-api/configs"
 )
 
 func main() {
@@ -13,12 +14,12 @@ func main() {
 		env = "dev"
 	}
 
-	cfg, err := config.Load("configs", env)
+	cfg, err := configs.Load("configs", env)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	app, cleanup, err := InitWithConfig(cfg)
+	app, cleanup, err := app.InitWithConfig(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

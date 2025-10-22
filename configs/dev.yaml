@@ -12,3 +12,4 @@ security:
   jwt_secret: "dev-secret"
   issuer: "go-order-api"
   audience: "go-order-api-clients"
+  ttl: 30

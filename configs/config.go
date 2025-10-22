@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"fmt"
@@ -52,9 +52,10 @@ type Config struct {
 	} `koanf:"kafka"`
 
 	Security struct {
-		JWTSecret string `koanf:"jwt_secret"`
-		Issuer    string `koanf:"issuer"`
-		Audience  string `koanf:"audience"`
+		JWTSecret string        `koanf:"jwt_secret"`
+		Issuer    string        `koanf:"issuer"`
+		Audience  string        `koanf:"audience"`
+		TTL       time.Duration `koanf:"ttl"`
 	} `koanf:"security"`
 }
 
