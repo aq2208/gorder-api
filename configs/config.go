@@ -57,6 +57,13 @@ type Config struct {
 		Audience  string        `koanf:"audience"`
 		TTL       time.Duration `koanf:"ttl"`
 	} `koanf:"security"`
+
+	CryptoConfig struct {
+		KeyID     string `koanf:"key_id"`
+		AES256B64 string `koanf:"aes256_b64url"`
+		RSAPubPEM string `koanf:"rsa_pub_pem"`
+		RSAPriPEM string `koanf:"rsa_pri_pem"`
+	}
 }
 
 func Load(pathDir, envName string) (Config, error) {

@@ -18,7 +18,6 @@ func NewAuthz(cfg configs.Config) *Authz {
 	return &Authz{cfg: cfg}
 }
 
-// Require checks JWT and ensures all required permissions are present
 func (a *Authz) Require(requiredPerms ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auth := c.GetHeader("Authorization")

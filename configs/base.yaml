@@ -29,7 +29,3 @@ rabbitmq:
 kafka:
   brokers: ["127.0.0.1:9092"]
   topic_events: "orders.events.v1"
-
-security:
-  jwks_url: "http://localhost:8081/realms/demo/protocol/openid-connect/certs"
-  grpc_mtls: false

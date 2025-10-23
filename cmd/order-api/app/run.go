@@ -11,6 +11,7 @@ import (
 	"github.com/aq2208/gorder-api/internal/adapter/http/middleware"
 	"github.com/aq2208/gorder-api/internal/adapter/observ"
 	"github.com/aq2208/gorder-api/internal/adapter/repo"
+	"github.com/aq2208/gorder-api/internal/security"
 	"github.com/aq2208/gorder-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -57,15 +58,21 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 		return nil, nil, err
 	}
 
+	// load crypto keys
+	cm, _ := security.NewCryptoMaterial(cfg)
+	cs, _ := security.NewCryptoService(cm)
+
 	orderRepo := repo.NewMySQLOrderRepo(db)
 	outboxRepo := repo.NewMySQLOutboxRepo(db)
 	idem := cache.NewRedisIdempotencyStore(rdb, cfg.Idempotency.TTL)
 
+	// init handlers + routers + middleware
 	createUC := usecase.NewCreateOrder(orderRepo, idem, outboxRepo)
 	h := http.NewOrderHandler(createUC, orderRepo)
 	th := http.NewTokenHandler(cfg)
-	authz := middleware.NewAuthz(cfg)
-	router := http.NewRouter(h, th, authz)
+	auth := middleware.NewAuthz(cfg)
+	cv := middleware.NewCryptoVerify(cs)
+	router := http.NewRouter(h, th, auth, cv)
 
 	cleanup := func() {
 		_ = db.Close()
