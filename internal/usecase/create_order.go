@@ -31,7 +31,7 @@ var (
 )
 
 func NewCreateOrder(repo OrderRepo, cache OrderCache, idem IdempotencyStore, queue OrderQueue) *CreateOrder {
-	return &CreateOrder{repo: repo, idem: idem, queue: queue}
+	return &CreateOrder{repo: repo, cache: cache, idem: idem, queue: queue}
 }
 
 // Execute orchestrates: validate -> idempotency -> persist -> enqueue -> return PROCESSING
@@ -64,12 +64,13 @@ func (uc *CreateOrder) Execute(ctx context.Context, in CreateOrderInput) (Create
 	// Build order record and validate
 	orderID := uuid.NewString()
 	rec := &OrderRecord{
-		ID:          orderID,
-		UserID:      in.UserID,
-		Status:      string(domain.StatusProcessing),
-		AmountCents: in.AmountCents,
-		Currency:    in.Currency,
-		ItemsJSON:   in.ItemsJSON,
+		ID:             orderID,
+		UserID:         in.UserID,
+		Status:         string(domain.StatusProcessing),
+		AmountCents:    in.AmountCents,
+		Currency:       in.Currency,
+		ItemsJSON:      in.ItemsJSON,
+		IdempotencyKey: in.IdempotencyKey,
 	}
 	if err := rec.Validate(); err != nil {
 		return CreateOrderOutput{}, err
@@ -81,7 +82,9 @@ func (uc *CreateOrder) Execute(ctx context.Context, in CreateOrderInput) (Create
 	}
 
 	// Cache
-	_ = uc.cache.SetStatus(ctx, orderID, string(domain.StatusProcessing))
+	if err := uc.cache.SetStatus(ctx, orderID, string(domain.StatusProcessing)); err != nil {
+		return CreateOrderOutput{}, err
+	}
 
 	// Enqueue event
 	msg := CreatedMsg{

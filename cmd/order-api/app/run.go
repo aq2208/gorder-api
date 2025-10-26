@@ -45,7 +45,7 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 	db.SetMaxIdleConns(16)
 
 	// init context
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	if err := db.PingContext(ctx); err != nil {
 		cancel()
 		return nil, nil, err
@@ -119,11 +119,11 @@ func setupQueue(ch *amqp091.Channel, gw *grpc.OrderGWClient) {
 		panic(err)
 	}
 
-	go func() {
-		if err := router.Start(); err != nil {
-			panic(err)
-		}
-	}()
+	//go func() {
+	//	if err := router.Start(); err != nil {
+	//		panic(err)
+	//	}
+	//}()
 }
 
 func setupKafkaListener(cfg configs.Config, repo *repo.MySQLOrderRepo, redisCache *cache.RedisCache) {

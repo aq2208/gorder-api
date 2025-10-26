@@ -57,7 +57,7 @@ func (r *MySQLOrderRepo) Create(ctx context.Context, o *usecase.OrderRecord) err
 	_, err := r.db.ExecContext(ctx, `
 INSERT INTO orders (id,user_id,status,amount_cents,currency,items_json,idempotency_key,version,created_at,updated_at)
 VALUES (?,?,?,?,?,?,?,0,NOW(),NOW())
-`, o.ID, o.UserID, o.Status, o.AmountCents, o.Currency, o.ItemsJSON)
+`, o.ID, o.UserID, o.Status, o.AmountCents, o.Currency, o.ItemsJSON, o.IdempotencyKey)
 	return err
 }
 

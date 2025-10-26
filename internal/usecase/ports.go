@@ -9,6 +9,7 @@ import (
 type OrderRecord struct {
 	ID, UserID, Status, ItemsJSON, Currency string
 	AmountCents                             int64
+	IdempotencyKey                          string
 }
 
 var ErrInvalidAmount = errors.New("invalid amount")

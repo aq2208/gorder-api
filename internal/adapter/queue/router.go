@@ -37,7 +37,7 @@ func NewRouter(ch *amqp.Channel, opts ...RouterOption) *Router {
 		ch:           ch,
 		prefetch:     50,
 		callTimeout:  10 * time.Second,
-		requeueOnErr: true,
+		requeueOnErr: true, // re-enqueue on error
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -77,6 +77,7 @@ func (r *Router) Start() error {
 
 		go func(queueName, tag string, h Handler, msgs <-chan amqp.Delivery) {
 			for d := range msgs {
+				log.Printf("[rmq-router] handler queue=%s tag=%s rk=%s body=%s", queueName, tag, d.RoutingKey, d.Body)
 				ctx, cancel := context.WithTimeout(context.Background(), r.callTimeout)
 				err := h.Handle(ctx, d)
 				cancel()

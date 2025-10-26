@@ -67,10 +67,12 @@ func InitOrderGWConn(ctx context.Context, cfg configs.Config) (*grpc.ClientConn,
 		opts = append(opts, grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(n)))
 	}
 
-	dctx, cancel := context.WithTimeout(ctx, dialTimeout)
+	_, cancel := context.WithTimeout(ctx, dialTimeout)
 	defer cancel()
 
-	conn, err := grpc.DialContext(dctx, cfg.GrpcServer.Target, opts...)
+	conn, err := grpc.NewClient(
+		cfg.GrpcServer.Target,
+		opts...)
 	if err != nil {
 		return nil, nil, err
 	}
