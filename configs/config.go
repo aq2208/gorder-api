@@ -79,6 +79,12 @@ type Config struct {
 		MaxRecvBytes int `koanf:"max_recv_bytes"` // e.g., 16<<20
 		MaxSendBytes int `koanf:"max_send_bytes"` // e.g., 16<<20
 	} `koanf:"grpc_server"`
+
+	KafkaBroker struct {
+		KafkaBrokers []string `koanf:"brokers"`
+		KafkaTopic   string   `koanf:"topic"`
+		KafkaGroupID string   `koanf:"group_id"`
+	} `koanf:"kafka"`
 }
 
 func Load(pathDir, envName string) (Config, error) {

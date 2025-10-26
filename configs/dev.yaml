@@ -6,8 +6,6 @@ redis:
   addr: "127.0.0.1:6379"
 rabbitmq:
   url: "amqp://guest:guest@127.0.0.1:5672/"
-kafka:
-  brokers: ["127.0.0.1:9092"]
 security:
   jwt_secret: "dev-secret"
   issuer: "go-order-api"
@@ -17,6 +15,10 @@ grpc_server:
   target: "localhost:50051"
   use_tls: false
   timeout: "10s"
+kafka:
+  brokers: ['127.0.0.1:9092']
+  topic: 'order.status.changed'
+  group_id: 'gorder-api'
 crypto:
   key_id: "v1"
   aes256_b64url: "e_LQd-NRhR-n41rch_jWLCeOw-XX-qpcBm0fzzUTS_0"

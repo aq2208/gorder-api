@@ -7,12 +7,13 @@ import (
 
 	"github.com/aq2208/gorder-api/configs"
 	"github.com/aq2208/gorder-api/internal/adapter/cache"
+	"github.com/aq2208/gorder-api/internal/adapter/grpc"
 	"github.com/aq2208/gorder-api/internal/adapter/http"
 	"github.com/aq2208/gorder-api/internal/adapter/http/middleware"
+	"github.com/aq2208/gorder-api/internal/adapter/kafka"
 	"github.com/aq2208/gorder-api/internal/adapter/observ"
 	"github.com/aq2208/gorder-api/internal/adapter/queue"
 	"github.com/aq2208/gorder-api/internal/adapter/repo"
-	"github.com/aq2208/gorder-api/internal/infrastructure/grpc"
 	"github.com/aq2208/gorder-api/internal/security"
 	"github.com/aq2208/gorder-api/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -88,6 +89,9 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 	// register queue-handler
 	setupQueue(ch, gw)
 
+	// register kafka-listener
+	setupKafkaListener(cfg, orderRepo, redisCache)
+
 	// init handlers + routers + middleware
 	createUC := usecase.NewCreateOrder(orderRepo, redisCache, idem, producer)
 	h := http.NewOrderHandler(createUC, orderRepo)
@@ -117,6 +121,23 @@ func setupQueue(ch *amqp091.Channel, gw *grpc.OrderGWClient) {
 
 	go func() {
 		if err := router.Start(); err != nil {
+			panic(err)
+		}
+	}()
+}
+
+func setupKafkaListener(cfg configs.Config, repo *repo.MySQLOrderRepo, redisCache *cache.RedisCache) {
+	grp, err := kafka.NewGroup(cfg.KafkaBroker.KafkaBrokers, cfg.KafkaBroker.KafkaGroupID)
+	if err != nil {
+		panic(err)
+	}
+
+	h := kafka.NewOrderStatusChangedHandler(repo, redisCache)
+	consumer := kafka.NewConsumer(grp, []string{cfg.KafkaBroker.KafkaTopic}, h.Handle)
+
+	// Run in background (respect app context if you have one)
+	go func() {
+		if err := consumer.Start(context.Background()); err != nil {
 			panic(err)
 		}
 	}()
