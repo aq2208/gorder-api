@@ -1,6 +1,8 @@
 module github.com/aq2208/gorder-api
 
-go 1.23.5
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
 	github.com/gin-gonic/gin v1.11.0
@@ -11,8 +13,10 @@ require (
 	github.com/knadh/koanf/providers/env v1.1.0
 	github.com/knadh/koanf/providers/file v1.2.0
 	github.com/knadh/koanf/v2 v2.3.0
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.14.0
 	go.uber.org/zap v1.27.0
+	google.golang.org/grpc v1.76.0
 )
 
 require (
@@ -56,5 +60,6 @@ require (
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )

@@ -10,6 +10,11 @@ import (
 
 type MySQLOrderRepo struct{ db *sql.DB }
 
+func (r *MySQLOrderRepo) UpdateStatus(ctx context.Context, id, toStatus string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewMySQLOrderRepo(db *sql.DB) *MySQLOrderRepo { return &MySQLOrderRepo{db: db} }
 
 func (r *MySQLOrderRepo) Create(ctx context.Context, o *usecase.OrderRecord) error {

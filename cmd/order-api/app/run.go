@@ -10,11 +10,14 @@ import (
 	"github.com/aq2208/gorder-api/internal/adapter/http"
 	"github.com/aq2208/gorder-api/internal/adapter/http/middleware"
 	"github.com/aq2208/gorder-api/internal/adapter/observ"
+	"github.com/aq2208/gorder-api/internal/adapter/queue"
 	"github.com/aq2208/gorder-api/internal/adapter/repo"
+	"github.com/aq2208/gorder-api/internal/infrastructure/grpc"
 	"github.com/aq2208/gorder-api/internal/security"
 	"github.com/aq2208/gorder-api/internal/usecase"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -58,16 +61,35 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 		return nil, nil, err
 	}
 
+	// init rabbitmq + register [queue-handler]
+	conn, _ := amqp091.Dial("amqp://guest:guest@localhost:5672/")
+	ch, _ := conn.Channel()
+
 	// load crypto keys
 	cm, _ := security.NewCryptoMaterial(cfg)
 	cs, _ := security.NewCryptoService(cm)
 
+	// gRPC: connect to order-gw
+	grpcConn, closeGRPC, err := InitOrderGWConn(context.Background(), cfg)
+	if err != nil {
+		return nil, nil, err
+	}
+	gw := grpc.NewOrderGWClientFromConn(grpcConn, 8*time.Second, "go-order-api/worker")
+
+	// infra
 	orderRepo := repo.NewMySQLOrderRepo(db)
-	outboxRepo := repo.NewMySQLOutboxRepo(db)
 	idem := cache.NewRedisIdempotencyStore(rdb, cfg.Idempotency.TTL)
+	redisCache := cache.NewRedisCache(rdb, cfg.Cache.TTL)
+	producer, err := queue.NewRabbitProducer(ch)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// register queue-handler
+	setupQueue(ch, gw)
 
 	// init handlers + routers + middleware
-	createUC := usecase.NewCreateOrder(orderRepo, idem, outboxRepo)
+	createUC := usecase.NewCreateOrder(orderRepo, redisCache, idem, producer)
 	h := http.NewOrderHandler(createUC, orderRepo)
 	th := http.NewTokenHandler(cfg)
 	auth := middleware.NewAuthz(cfg)
@@ -77,7 +99,25 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 	cleanup := func() {
 		_ = db.Close()
 		_ = rdb.Close()
+		closeGRPC()
 	}
 
 	return &App{Router: router}, cleanup, nil
+}
+
+func setupQueue(ch *amqp091.Channel, gw *grpc.OrderGWClient) {
+	h := queue.NewOrderCreatedHandler(gw)
+
+	router := queue.NewRouter(ch, queue.WithPrefetch(50))
+	router.Register("order.created.q", queue.JSONHandler[usecase.CreatedMsg]{HandleFunc: h.HandleCreate})
+
+	if err := router.Start(); err != nil {
+		panic(err)
+	}
+
+	go func() {
+		if err := router.Start(); err != nil {
+			panic(err)
+		}
+	}()
 }

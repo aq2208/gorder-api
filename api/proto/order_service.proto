@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+//option go_package = "github.com/aq2208/gorder-api/internal/generated/gwpb;gwpb";
+option go_package = "./";
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+}
+
+message CreateOrderRequest {
+  string order_id = 1;
+  string user_id  = 2;
+  int64  amount_cents = 3;
+  string currency = 4;
+}
+
+message CreateOrderResponse {
+  string status = 1;
+}

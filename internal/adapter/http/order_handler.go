@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -18,42 +19,59 @@ func NewOrderHandler(create *usecase.CreateOrder, query usecase.OrderRepo) *Orde
 	return &OrderHandler{create: create, query: query}
 }
 
-type createReq struct {
-	AmountCents int64  `json:"amount_cents" binding:"required,gt=0"`
-	Currency    string `json:"currency" binding:"required"`
-	ItemsJSON   string `json:"items_json" binding:"required"`
+type createOrderReq struct {
+	UserID string `json:"userId" binding:"required"`
+
+	Amount struct {
+		Cents    int64  `json:"cents" binding:"required,gt=0"`
+		Currency string `json:"currency" binding:"required"`
+	} `json:"amount" binding:"required"`
+
+	Items string `json:"items" binding:"required"`
 }
 
-func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	// (Later) get user from JWT middleware; for now use header for demo
-	userID := c.GetHeader("X-Demo-User")
-	idemKey := c.GetHeader("X-Idempotency-Key")
+type createOrderResp struct {
+	OrderID string `json:"orderId"`
+	Status  string `json:"status"`
+}
 
-	var req createReq
+// CreateOrder handler: translate to use case input
+func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	var req createOrderReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad_request"})
 		return
 	}
 
+	idemKey := c.GetHeader("X-Idempotency-Key") // prevent duplicated requests
+
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
 	defer cancel()
 
 	out, err := h.create.Execute(ctx, usecase.CreateOrderInput{
-		UserID:         userID,
+		UserID:         req.UserID,
 		IdempotencyKey: idemKey,
-		AmountCents:    req.AmountCents,
-		Currency:       req.Currency,
-		ItemsJSON:      req.ItemsJSON,
+		AmountCents:    req.Amount.Cents,
+		Currency:       req.Amount.Currency,
+		ItemsJSON:      req.Items,
 	})
+
 	if err != nil {
 		status := http.StatusInternalServerError
-		if err == usecase.ErrDuplicate {
+		if errors.Is(err, usecase.ErrDuplicate) {
 			status = http.StatusConflict
+		}
+		if errors.Is(err, usecase.ErrInvalidAmount) {
+			status = http.StatusBadRequest
 		}
 		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusAccepted, gin.H{"order_id": out.OrderID, "status": out.Status})
+
+	c.JSON(http.StatusAccepted, createOrderResp{
+		OrderID: out.OrderID,
+		Status:  out.Status,
+	})
 }
 
 func (h *OrderHandler) GetOrderByID(c *gin.Context) {

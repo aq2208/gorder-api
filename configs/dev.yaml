@@ -13,6 +13,10 @@ security:
   issuer: "go-order-api"
   audience: "go-order-api-clients"
   ttl: 30
+grpc_server:
+  target: "localhost:50051"
+  use_tls: false
+  timeout: "10s"
 crypto:
   key_id: "v1"
   aes256_b64url: "e_LQd-NRhR-n41rch_jWLCeOw-XX-qpcBm0fzzUTS_0"

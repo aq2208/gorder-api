@@ -1,7 +1,5 @@
 package domain
 
-import "errors"
-
 type Status string
 
 const (
@@ -10,8 +8,6 @@ const (
 	StatusConfirmed  Status = "CONFIRMED"
 	StatusFailed     Status = "FAILED"
 )
-
-var ErrInvalidAmount = errors.New("invalid amount")
 
 type Money struct {
 	Cents    int64
@@ -24,11 +20,4 @@ type Order struct {
 	Status    Status
 	Amount    Money
 	ItemsJSON string // keep simple for now
-}
-
-func (o *Order) Validate() error {
-	if o.Amount.Cents <= 0 || o.Amount.Currency == "" {
-		return ErrInvalidAmount
-	}
-	return nil
 }

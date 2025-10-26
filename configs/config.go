@@ -40,6 +40,10 @@ type Config struct {
 		TTL time.Duration `koanf:"ttl"`
 	} `koanf:"idempotency"`
 
+	Cache struct {
+		TTL time.Duration `koanf:"ttl"`
+	} `koanf:"cache"`
+
 	Rabbit struct {
 		URL        string `koanf:"url"`
 		Exchange   string `koanf:"exchange"`
@@ -63,7 +67,18 @@ type Config struct {
 		AES256B64 string `koanf:"aes256_b64url"`
 		RSAPubPEM string `koanf:"rsa_pub_pem"`
 		RSAPriPEM string `koanf:"rsa_pri_pem"`
-	}
+	} `koanf:"crypto"`
+
+	GrpcServer struct {
+		Target     string        `koanf:"target"`  // e.g. "order-gw:50051" or "localhost:50051"
+		Timeout    time.Duration `koanf:"timeout"` // dial timeout (e.g., 5s)
+		UseTLS     bool          `koanf:"use_tls"`
+		CACertPath string        `koanf:"ca_cert_path"` // optional: custom CA
+		ServerName string        `koanf:"server_name"`  // optional: override server name for TLS
+		// Optional advanced:
+		MaxRecvBytes int `koanf:"max_recv_bytes"` // e.g., 16<<20
+		MaxSendBytes int `koanf:"max_send_bytes"` // e.g., 16<<20
+	} `koanf:"grpc_server"`
 }
 
 func Load(pathDir, envName string) (Config, error) {
