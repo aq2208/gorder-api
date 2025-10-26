@@ -60,7 +60,7 @@ func (c *RabbitConsumer) Start() error {
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), c.CallTimeout)
-			err := c.Handler.Handle(ctx, ev)
+			err := c.Handler.Handle(ctx, d)
 			cancel()
 
 			if err != nil {
