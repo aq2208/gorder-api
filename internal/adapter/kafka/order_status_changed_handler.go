@@ -20,24 +20,15 @@ func (h *OrderStatusChangedHandler) Handle(ctx context.Context, ev usecase.Order
 	// Map external status -> internal
 	var newStatus domain.Status
 	switch ev.Status {
-	case "SUCCESS":
+	case "CONFIRMED":
 		newStatus = domain.StatusConfirmed
 	default:
 		newStatus = domain.StatusFailed
 	}
 
-	// Prefer guarded transition if repo supports it (PROCESSING -> target)
-	type updater interface {
-		UpdateStatusIf(ctx context.Context, id string, fromStatus, toStatus string) (bool, error)
-	}
-	if u, ok := any(h.Repo).(updater); ok {
-		if _, err := u.UpdateStatusIf(ctx, ev.OrderID, string(domain.StatusProcessing), string(newStatus)); err != nil {
-			return err
-		}
-	} else {
-		if err := h.Repo.UpdateStatus(ctx, ev.OrderID, string(newStatus)); err != nil {
-			return err
-		}
+	// update order status
+	if err := h.Repo.UpdateStatus(ctx, ev.OrderID, string(newStatus)); err != nil {
+		return err
 	}
 
 	// Cache best-effort

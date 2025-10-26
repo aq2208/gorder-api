@@ -10,9 +10,45 @@ import (
 
 type MySQLOrderRepo struct{ db *sql.DB }
 
+func (r *MySQLOrderRepo) UpdateStatusIf(ctx context.Context, id string, fromStatus, toStatus string) (bool, error) {
+	res, err := r.db.ExecContext(ctx, `
+        UPDATE orders 
+        SET status = ?, updated_at = NOW()
+        WHERE id = ? AND status = ?`,
+		toStatus, id, fromStatus,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	// rows == 0 → nothing matched (either not found or status mismatch)
+	return rows > 0, nil
+}
+
 func (r *MySQLOrderRepo) UpdateStatus(ctx context.Context, id, toStatus string) error {
-	//TODO implement me
-	panic("implement me")
+	res, err := r.db.ExecContext(ctx, `
+        UPDATE orders 
+        SET status = ?, updated_at = NOW()
+        WHERE id = ?`,
+		toStatus, id,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func NewMySQLOrderRepo(db *sql.DB) *MySQLOrderRepo { return &MySQLOrderRepo{db: db} }

@@ -23,6 +23,7 @@ func (rec *OrderRecord) Validate() error {
 type OrderRepo interface {
 	Create(ctx context.Context, o *OrderRecord) error
 	UpdateStatus(ctx context.Context, id, toStatus string) error
+	UpdateStatusIf(ctx context.Context, id string, fromStatus, toStatus string) (bool, error)
 	GetByID(ctx context.Context, id string) (*OrderRecord, error)
 	GetByUserAndIdemKey(ctx context.Context, userID, idemKey string) (*OrderRecord, error)
 }
