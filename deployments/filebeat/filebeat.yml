@@ -1,0 +1,48 @@
+# yaml
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /logs/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: msg
+
+    # keep custom metadata out of root to avoid mapping conflicts
+    fields:
+      app: order-api
+    fields_under_root: false
+
+    processors:
+      # convert your app's `time` field into ES `@timestamp`
+      - rename:
+          fields:
+            - from: "time"
+              to: "@timestamp"
+          ignore_missing: true
+          fail_on_error: false
+
+      # put small extra metadata under a namespace to avoid collisions
+      - add_fields:
+          target: meta
+          fields:
+            env: local
+            service: order-api
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+setup.kibana:
+  host: "http://kibana:5601"
+
+processors:
+  - add_host_metadata: ~
+  - add_locale: ~
+
+setup.template.enabled: true
+setup.template.overwrite: true
+
+# enable debug temporarily to see the dropped event and cause
+logging.level: debug
+logging.selectors: ["*"]
+logging.to_files: false

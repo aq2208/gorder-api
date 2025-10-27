@@ -14,6 +14,7 @@ import (
 	"github.com/aq2208/gorder-api/internal/adapter/observ"
 	"github.com/aq2208/gorder-api/internal/adapter/queue"
 	"github.com/aq2208/gorder-api/internal/adapter/repo"
+	"github.com/aq2208/gorder-api/internal/logging"
 	"github.com/aq2208/gorder-api/internal/security"
 	"github.com/aq2208/gorder-api/internal/usecase"
 	"github.com/gin-gonic/gin"
@@ -51,6 +52,8 @@ func InitWithConfig(cfg configs.Config) (*App, func(), error) {
 		return nil, nil, err
 	}
 	cancel()
+
+	logging.FromCtx(ctx).Info("order-api: Starting up...")
 
 	// init redis
 	rdb := redis.NewClient(&redis.Options{
@@ -118,12 +121,6 @@ func setupQueue(ch *amqp091.Channel, gw *grpc.OrderGWClient) {
 	if err := router.Start(); err != nil {
 		panic(err)
 	}
-
-	//go func() {
-	//	if err := router.Start(); err != nil {
-	//		panic(err)
-	//	}
-	//}()
 }
 
 func setupKafkaListener(cfg configs.Config, repo *repo.MySQLOrderRepo, redisCache *cache.RedisCache) {
